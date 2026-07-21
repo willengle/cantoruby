@@ -10,17 +10,17 @@
             --card-bg: #1e293b;
             --border-color: #334155;
             --input-bg: #0f172a;
-
+            
             --primary: #3b82f6;
             --primary-hover: #2563eb;
             --secondary: #334155;
             --secondary-hover: #475569;
             --success: #10b981;
-
+            
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --ruby-color: #dc2626;
-
+            
             --radius: 12px;
         }
 
@@ -167,7 +167,7 @@
             color: #ffffff !important;
         }
 
-        /* Ruby Visual Formatting */
+        /* Ruby Layout */
         .preview-content {
             font-size: 2.1rem;
             line-height: 2.8;
@@ -187,6 +187,7 @@
             letter-spacing: 0.5px;
         }
 
+        /* Bottom baseline alignment for punctuation */
         .punct {
             font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
             vertical-align: baseline;
@@ -228,8 +229,8 @@
 李宏傑：有呀，我叫宏傑。
 黃正男：呢個名...</textarea>
                 <div class="button-row">
-                    <button class="btn btn-secondary" onclick="clearText()">Clear</button>
-                    <button class="btn btn-primary" onclick="convertText()">Convert to Ruby HTML</button>
+                    <button class="btn btn-secondary" id="clearBtn">Clear</button>
+                    <button class="btn btn-primary" id="convertBtn">Convert to Ruby HTML</button>
                 </div>
             </div>
         </div>
@@ -243,44 +244,16 @@
             <div class="card">
                 <div class="section-header">
                     <div class="section-title">Generated HTML Code</div>
-                    <button class="btn btn-secondary btn-sm" id="copyBtn" onclick="copyCode()">Copy Code</button>
+                    <button class="btn btn-secondary btn-sm" id="copyBtn">Copy Code</button>
                 </div>
                 <pre><code id="codeOutput"></code></pre>
             </div>
         </div>
     </div>
 
-    <script>
-        // Extended embedded dictionary covering Cantonese colloquial vocabulary, general usage, and names
-        const dictionary = {
-            // Names & Dialogue Words from Screenshots
-            "張": "zoeng1", "美": "mei5", "玲": "ling4", "歡": "fun1", "迎": "jing4", "你": "nei5",
-            "嚟": "lai4", "溫": "wan1", "哥": "go1", "華": "waa4", "我": "ngo5", "係": "hai6",
-            "可": "ho2", "以": "ji5", "叫": "giu3", "英": "jing1", "文": "man4", "名": "ming4",
-            "呢": "nei1", "位": "wai2", "同": "tung4", "學": "hok6", "咩": "me1", "呀": "aa3",
-            "李": "lei5", "宏": "wang4", "傑": "git6", "喺": "hai2", "香": "hoeng1", "港": "gong2",
-            "出": "ceut1", "世": "sai3", "但": "daan6", "三": "saam1", "歲": "seui3", "就": "zau6",
-            "移": "ji4", "咗": "zo2", "民": "man4", "度": "dou6", "陳": "can4", "志": "zi3",
-            "成": "sing4", "有": "jau5", "冇": "mou5", "中": "zung1", "黃": "wong4", "正": "zing3",
-            "男": "naam4", "個": "go3", "大": "daai6", "家": "gaa1", "好": "hou2", "啱": "ngaam1",
-            "由": "jau4", "廣": "gwong2", "州": "zau1", "加": "gaa1", "拿": "naa4", "留": "lau4",
-            "今": "gam1", "年": "nin4", "一": "jat1", "二": "ji6", "級": "kap1", "住": "zyu6",
-            "星": "sing1", "球": "kau4", "上": "soeng5", "小": "siu2", "王": "wong4", "子": "zi2", "在": "zoi6",
-
-            // Common Cantonese Particles, Verbs, Nouns & Pronouns
-            "佢": "keoi5", "哋": "dei6", "啲": "di1", "乜": "mat1", "唔": "m4", "咁": "gam2",
-            "噉": "gam2", "諗": "nam2", "睇": "tai2", "聽": "teng1", "講": "gong2", "食": "sik6",
-            "飲": "jam2", "搵": "wan2", "攞": "lo2", "俾": "bei2", "緊": "gan2", "翻": "faan1",
-            "返": "faan1", "屋": "uk1", "企": "kei5", "車": "ce1", "房": "fong4", "路": "lou6",
-            "心": "sam1", "情": "cing4", "事": "si6", "日": "jat6", "天": "tin1", "時": "si4",
-            "候": "hau6", "多": "do1", "少": "siu2", "高": "gou1", "矮": "ai2", "快": "faai3",
-            "慢": "maan6", "新": "san1", "舊": "gau6", "人": "jan4", "水": "seui2", "火": "fo2",
-            "山": "saan1", "海": "hoi2", "地": "dei6", "天": "tin1", "前": "cin4", "後": "hau6",
-            "左": "zo2", "右": "jau6", "內": "noi6", "外": "ngoi6", "東": "dung1", "南": "naam4",
-            "西": "sai1", "北": "bak1", "長": "coeng4", "短": "dyun2", "重": "cung5", "輕": "hing1",
-            "買": "maai5", "賣": "maai6", "行": "haang4", "走": "zau2", "跑": "pau2", "坐": "co5",
-            "開": "hoi1", "關": "gwaan1", "問": "man6", "答": "daap3", "愛": "oi3", "想": "soeng2"
-        };
+    <script type="module">
+        // Import bundled ES module via jsDelivr for maximum CDN reliability
+        import ToJyutping from 'https://cdn.jsdelivr.net/npm/to-jyutping@1.3.0/+esm';
 
         const punctuationRegex = /[，。！？：；「」『』、（）—…\s]/;
 
@@ -289,20 +262,28 @@
             if (!input.trim()) return;
 
             let htmlParts = [];
+            
+            try {
+                // Parse Chinese characters into character-jyutping pairs
+                const list = ToJyutping.getJyutpingList(input);
 
-            for (let char of input) {
-                const jyutping = dictionary[char];
+                for (const item of list) {
+                    const char = item[0];
+                    const jyutping = item[1];
 
-                if (punctuationRegex.test(char)) {
-                    htmlParts.push('<span class="punct">' + char + '</span>');
+                    if (punctuationRegex.test(char)) {
+                        htmlParts.push('<span class="punct">' + char + '</span>');
+                    } else if (jyutping) {
+                        htmlParts.push('<ruby>' + char + '<rt style="color: #dc2626;">' + jyutping + '</rt></ruby>');
+                    } else {
+                        // Fallback for missing characters or English names (e.g., Peter, Rachel)
+                        htmlParts.push(char);
+                    }
                 }
-                else if (jyutping) {
-                    htmlParts.push('<ruby>' + char + '<rt style="color: #dc2626;">' + jyutping + '</rt></ruby>');
-                }
-                else {
-                    // English words or unknown Chinese characters output normally without breaking execution
-                    htmlParts.push(char);
-                }
+            } catch (err) {
+                console.error("Error generating Jyutping:", err);
+                alert("Could not load dictionary module. Ensure the page is accessed via HTTPS or a local server.");
+                return;
             }
 
             const rubyHtml = htmlParts.join('');
@@ -334,6 +315,10 @@
                 console.error('Failed to copy: ', err);
             });
         }
+
+        document.getElementById('convertBtn').addEventListener('click', convertText);
+        document.getElementById('clearBtn').addEventListener('click', clearText);
+        document.getElementById('copyBtn').addEventListener('click', copyCode);
     </script>
 </body>
 </html>
