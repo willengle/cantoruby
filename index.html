@@ -16,6 +16,7 @@
             --secondary: #334155;
             --secondary-hover: #475569;
             --success: #10b981;
+            --error-bg: #991b1b;
             
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -167,7 +168,16 @@
             color: #ffffff !important;
         }
 
-        /* Ruby Layout */
+        .error-banner {
+            background-color: var(--error-bg);
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: calc(var(--radius) - 4px);
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+
+        /* Ruby Visual Layout */
         .preview-content {
             font-size: 2.1rem;
             line-height: 2.8;
@@ -187,7 +197,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Bottom baseline alignment for punctuation */
         .punct {
             font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
             vertical-align: baseline;
@@ -221,13 +230,13 @@
             <p>Convert Chinese text into formatted HTML Ruby annotations with Jyutping</p>
         </header>
 
+        <div id="errorContainer" class="error-banner hidden"></div>
+
         <div class="card">
             <div class="input-group">
                 <textarea id="inputText" placeholder="Type or paste Cantonese text here...">張美玲：歡迎你嚟溫哥華！我係美玲，你可以叫我英文名 Rachel。呢位同學，你叫咩名呀？
-李宏傑：我叫 Peter，喺香港出世，但係三歲就移咗民嚟呢度。
-陳志成：你有冇中文名呀？
-李宏傑：有呀，我叫宏傑。
-黃正男：呢個名...</textarea>
+
+</textarea>
                 <div class="button-row">
                     <button class="btn btn-secondary" id="clearBtn">Clear</button>
                     <button class="btn btn-primary" id="convertBtn">Convert to Ruby HTML</button>
@@ -246,25 +255,44 @@
                     <div class="section-title">Generated HTML Code</div>
                     <button class="btn btn-secondary btn-sm" id="copyBtn">Copy Code</button>
                 </div>
-                <pre><code id="codeOutput"></code></pre>
+                pre><code id="codeOutput"></code></pre>
             </div>
         </div>
     </div>
 
     <script type="module">
-        // Import bundled ES module via jsDelivr for maximum CDN reliability
-        import ToJyutping from 'https://cdn.jsdelivr.net/npm/to-jyutping@1.3.0/+esm';
+        import ModuleExports from 'https://esm.run/to-jyutping';
 
+        // Robustly extract Jyutping converter regardless of export wrapping
+        const ToJyutping = ModuleExports.default || ModuleExports;
         const punctuationRegex = /[，。！？：；「」『』、（）—…\s]/;
 
+        function showError(msg) {
+            const errBox = document.getElementById('errorContainer');
+            errBox.textContent = msg;
+            errBox.classList.remove('hidden');
+        }
+
+        function clearError() {
+            const errBox = document.getElementById('errorContainer');
+            errBox.textContent = '';
+            errBox.classList.add('hidden');
+        }
+
         function convertText() {
+            clearError();
             const input = document.getElementById('inputText').value;
             if (!input.trim()) return;
+
+            if (!ToJyutping || typeof ToJyutping.getJyutpingList !== 'function') {
+                showError('Error: Dictionary library failed to load properly. Please check your network connection.');
+                return;
+            }
 
             let htmlParts = [];
             
             try {
-                // Parse Chinese characters into character-jyutping pairs
+                // Get character-to-jyutping mappings from complete dictionary engine
                 const list = ToJyutping.getJyutpingList(input);
 
                 for (const item of list) {
@@ -276,13 +304,13 @@
                     } else if (jyutping) {
                         htmlParts.push('<ruby>' + char + '<rt style="color: #dc2626;">' + jyutping + '</rt></ruby>');
                     } else {
-                        // Fallback for missing characters or English names (e.g., Peter, Rachel)
+                        // Text fallback for non-Chinese characters/numbers
                         htmlParts.push(char);
                     }
                 }
             } catch (err) {
                 console.error("Error generating Jyutping:", err);
-                alert("Could not load dictionary module. Ensure the page is accessed via HTTPS or a local server.");
+                showError('Execution error: ' + err.message);
                 return;
             }
 
@@ -294,6 +322,7 @@
         }
 
         function clearText() {
+            clearError();
             document.getElementById('inputText').value = '';
             document.getElementById('inputText').focus();
             document.getElementById('resultsContainer').classList.add('hidden');
