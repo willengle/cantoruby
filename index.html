@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cantonese Jyutping Ruby Generator</title>
+    <!-- Official ToJyutping bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/to-jyutping@3.1.1"></script>
     <style>
         :root {
             --bg-body: #0f172a;
@@ -234,9 +236,7 @@
 
         <div class="card">
             <div class="input-group">
-                <textarea id="inputText" placeholder="Type or paste Cantonese text here...">張美玲：歡迎你嚟溫哥華！我係美玲，你可以叫我英文名 Rachel。呢位同學，你叫咩名呀？
-
-</textarea>
+                <textarea id="inputText" placeholder="Type or paste Cantonese text here...">張美玲：歡迎你嚟溫哥華！我係美玲，你可以叫我英文名 Rachel。呢位同學，你叫咩名呀？</textarea>
                 <div class="button-row">
                     <button class="btn btn-secondary" id="clearBtn">Clear</button>
                     <button class="btn btn-primary" id="convertBtn">Convert to Ruby HTML</button>
@@ -255,16 +255,12 @@
                     <div class="section-title">Generated HTML Code</div>
                     <button class="btn btn-secondary btn-sm" id="copyBtn">Copy Code</button>
                 </div>
-                pre><code id="codeOutput"></code></pre>
+                <pre><code id="codeOutput"></code></pre>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import ModuleExports from 'https://esm.run/to-jyutping';
-
-        // Robustly extract Jyutping converter regardless of export wrapping
-        const ToJyutping = ModuleExports.default || ModuleExports;
+    <script>
         const punctuationRegex = /[，。！？：；「」『』、（）—…\s]/;
 
         function showError(msg) {
@@ -284,16 +280,15 @@
             const input = document.getElementById('inputText').value;
             if (!input.trim()) return;
 
-            if (!ToJyutping || typeof ToJyutping.getJyutpingList !== 'function') {
-                showError('Error: Dictionary library failed to load properly. Please check your network connection.');
+            if (typeof window.ToJyutping === 'undefined' || typeof window.ToJyutping.getJyutpingList !== 'function') {
+                showError('Error: ToJyutping library failed to load. Please check your internet connection.');
                 return;
             }
 
             let htmlParts = [];
             
             try {
-                // Get character-to-jyutping mappings from complete dictionary engine
-                const list = ToJyutping.getJyutpingList(input);
+                const list = window.ToJyutping.getJyutpingList(input);
 
                 for (const item of list) {
                     const char = item[0];
@@ -304,7 +299,6 @@
                     } else if (jyutping) {
                         htmlParts.push('<ruby>' + char + '<rt style="color: #dc2626;">' + jyutping + '</rt></ruby>');
                     } else {
-                        // Text fallback for non-Chinese characters/numbers
                         htmlParts.push(char);
                     }
                 }
